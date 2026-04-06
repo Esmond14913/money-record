@@ -3,8 +3,9 @@ let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
     { code: 'VND', name: '越南盾', rate: 820 },
-    { code: 'CNY', name: '人民幣', rate: 4.5 },
-    { code: 'USD', name: '美金', rate: 32 }
+    { code: 'JPY', name: '日圓', rate: 4.7 },
+    { code: 'CNY', name: '人民幣', rate: 0.22 },
+    { code: 'USD', name: '美金', rate: 0.031 }
   ],
   categories: JSON.parse(localStorage.getItem('mr_v4_cat')) || ['餐飲', '交通', '雜支', '住宿', '購物'],
   exportEmail: localStorage.getItem('mr_v4_email') || '',
