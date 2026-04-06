@@ -59,13 +59,30 @@ function updateDashboard() {
   const homeTotal = document.getElementById('total-home');
   if (homeTotal) homeTotal.innerText = Math.round(totalTwd).toLocaleString();
   
-  const vndTotal = state.expenses.filter(e => e.currency === 'VND').reduce((s, e) => s + parseFloat(e.foreignAmount), 0);
-  const homeForeign = document.getElementById('total-foreign');
-  if (homeForeign) homeForeign.innerText = Math.round(vndTotal).toLocaleString() + ' 盾';
-  
-  const vndRate = state.currencies.find(c => c.code === 'VND')?.rate || 820;
-  const rateDisplay = document.getElementById('current-rate-display');
-  if (rateDisplay) rateDisplay.innerText = `1 TWD : ${vndRate} VND`;
+  // Dynamic Foreign Totals (v4.4)
+  const dynamicInfo = document.getElementById('dynamic-exchange-info');
+  if (dynamicInfo) {
+    if (state.expenses.length === 0) {
+      dynamicInfo.innerHTML = '<div class="info-block" style="opacity:0.3;"><span class="small-label">尚未有資料</span></div>';
+    } else {
+      // Get all unique foreign currencies used in expenses
+      const usedCodes = [...new Set(state.expenses.map(e => e.currency))];
+      
+      dynamicInfo.innerHTML = usedCodes.map((code, idx) => {
+        const total = state.expenses.filter(e => e.currency === code).reduce((s, e) => s + parseFloat(e.foreignAmount), 0);
+        const rateObj = state.currencies.find(c => c.code === code) || { rate: 1, name: code };
+        
+        return `
+          ${idx > 0 ? '<div class="info-divider"></div>' : ''}
+          <div class="info-block">
+            <span class="small-label">${rateObj.name}總額</span>
+            <span class="info-value">${Math.round(total).toLocaleString()} ${code}</span>
+            <small style="font-size:0.55rem; color:var(--secondary); font-weight:600; margin-top:1px; white-space:nowrap;">1 TWD : ${rateObj.rate}</small>
+          </div>
+        `;
+      }).join('');
+    }
+  }
   
   const itemCount = document.getElementById('item-count');
   if (itemCount) itemCount.innerText = `${state.expenses.length} 筆紀錄`;
