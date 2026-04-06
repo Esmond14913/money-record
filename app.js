@@ -251,6 +251,15 @@ window.addCategory = () => {
 };
 window.deleteCategory = (idx) => { if (state.categories.length > 1 && confirm('確定刪除？')) { state.categories.splice(idx,1); saveState(); initUI(); } };
 
+window.openManual = () => {
+  const overlay = document.getElementById('modal-overlay');
+  const content = document.getElementById('modal-content');
+  const temp = document.getElementById('manual-template').content.cloneNode(true);
+  content.innerHTML = '';
+  content.appendChild(temp);
+  overlay.style.display = 'flex';
+};
+
 function openModal(id = null) {
   state.editingId = id;
   const exp = id ? state.expenses.find(e => e.id === id) : null;

@@ -125,6 +125,11 @@
                     </div>
                 </div>
 
+                <div class="glass-card settings-group">
+                    <h3 class="settings-title">幫助與支援</h3>
+                    <button onclick="openManual()" class="action-btn-glass" style="width:100%; border-color:var(--secondary); color:var(--secondary); font-weight:800;">📖 快速使用指南 (User Manual)</button>
+                </div>
+
                 <div style="padding: 0 1rem;">
                     <button onclick="confirmClearAll()" class="danger-btn-glass">🗑️ 清除所有記帳紀錄</button>
                 </div>
@@ -196,11 +201,44 @@
                 <label>消費日期</label>
                 <input type="date" id="date" class="glass-input">
             </div>
-            <div class="modal-actions">
-                <button type="button" id="delete-record-btn" class="modal-delete-btn" style="display:none;">🗑️</button>
-                <button type="submit" class="modal-save-btn">儲存紀錄</button>
             </div>
         </form>
+    </template>
+
+    <!-- Project Manual Template -->
+    <template id="manual-template">
+        <div class="modal-header">
+            <h3>📖 使用指南</h3>
+            <button onclick="closeModal()" class="close-icon-btn">✕</button>
+        </div>
+        <div class="manual-content">
+            <section class="m-section">
+                <h4>🚀 安裝到手機 (PWA)</h4>
+                <div class="m-item"><strong>安卓 (Chrome)：</strong> 點擊「⋮」>「安裝應用程式」</div>
+                <div class="m-item"><strong>iPhone (Safari)：</strong> 點擊分享鈕「↑」>「加入主畫面」</div>
+            </section>
+            <section class="m-section">
+                <h4>🛠️ 設定匯率與類別</h4>
+                <div class="m-item">在「管理」分頁，可新增自定義記帳類別與設定參考匯率。</div>
+            </section>
+            <section class="m-section">
+                <h4>💰 如何記帳</h4>
+                <div class="m-item">點擊「+」大按鈕，選擇幣別、輸入金額、選擇分類並儲存即可。</div>
+                <div class="m-item">點擊首頁列表可進入「編輯模式」修改或刪除。</div>
+            </section>
+            <section class="m-section">
+                <h4>💾 備份與還原 (極重要)</h4>
+                <div class="m-item">設定備份信箱後點擊「匯出備份」存成 Excel。</div>
+                <div class="m-item">換手機時，點擊「匯入資料」選取該 Excel 即可一鍵還原。</div>
+            </section>
+            <section class="m-section">
+                <h4>🛡️ 隱私聲明</h4>
+                <div class="m-item">資料完全存放在手機本地，不會上傳雲端，請定期備份 Excel。</div>
+            </section>
+            <div style="text-align:center; padding-top:1rem; opacity:0.5; font-size:0.7rem;">
+                Powered by Esmond v4.3
+            </div>
+        </div>
     </template>
 
     <script src="app.js"></script>
