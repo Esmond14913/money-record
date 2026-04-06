@@ -1,0 +1,21 @@
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# MacOS system files
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Excel temp files
+~$*.xlsx
+*.tmp
+
+# App specific
+/node_modules/
+dist/
+build/
