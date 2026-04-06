@@ -1,4 +1,4 @@
-// --- State Management (v4.3) ---
+// --- State Management (v4.4.1) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
