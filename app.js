@@ -106,6 +106,24 @@ function renderExpenses() {
 }
 
 const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
+const currencyDict = {
+  'USD': '美金', 'CNY': '人民幣', 'VND': '越南盾', 'JPY': '日圓', 
+  'EUR': '歐元', 'GBP': '英鎊', 'HKD': '港幣', 'KRW': '韓元', 
+  'SGD': '新加坡幣', 'AUD': '澳幣', 'CAD': '加幣', 'THB': '泰銖',
+  'MOP': '澳門幣', 'PHP': '披索', 'MYR': '馬幣', 'IDR': '印尼盾'
+};
+
+window.handleCurrencyLookup = () => {
+  const code = document.getElementById('new-currency-code').value.toUpperCase().trim();
+  const hint = document.getElementById('currency-name-hint');
+  if (currencyDict[code]) {
+    hint.innerText = `偵測到：${currencyDict[code]}`;
+    hint.style.color = 'var(--success)';
+  } else {
+    hint.innerText = code ? '新幣別名稱 (手動)' : '名稱將自動代入...';
+    hint.style.color = 'var(--secondary)';
+  }
+};
 
 function renderStats() {
   const total = state.expenses.reduce((s, e) => s + parseFloat(e.homeAmount), 0);
@@ -200,9 +218,15 @@ window.addCurrency = () => {
   const code = codeInput.value.toUpperCase().trim();
   const rate = parseFloat(rateInput.value);
   if (code && rate) {
-    state.currencies.push({ code, name: code, rate });
+    const name = currencyDict[code] || code;
+    state.currencies.push({ code, name, rate });
     saveState(); initUI();
     codeInput.value = ''; rateInput.value = '';
+    const hint = document.getElementById('currency-name-hint');
+    if (hint) {
+      hint.innerText = '名稱將自動代入...';
+      hint.style.color = 'var(--secondary)';
+    }
   }
 };
 window.deleteCurrency = (idx) => { if (state.currencies.length > 1 && confirm('確定刪除？')) { state.currencies.splice(idx,1); saveState(); initUI(); } };

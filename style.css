@@ -65,6 +65,7 @@ body {
   font-weight: 800;
   margin: 0.25rem 0;
   background: linear-gradient(to bottom, #fff, #94a3b8);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: flex; justify-content: center; align-items: baseline; gap: 0.25rem;
@@ -190,9 +191,52 @@ body {
   display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1rem;
   background: rgba(255,255,255,0.02); border-radius: 0.85rem; font-size: 0.85rem;
 }
-.quick-add { display: flex; gap: 0.5rem; }
-.glass-input { background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); border-radius: 0.85rem; padding: 0.6rem 0.85rem; color: #fff; font-size: 0.85rem; }
-.add-btn-small { background: var(--accent); border: none; color: #fff; width: 40px; height: 40px; border-radius: 0.85rem; font-size: 1.2rem; cursor: pointer; }
+
+/* Management Quick Add Optimized (v4.3) */
+.quick-add-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.input-hint {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--secondary);
+  font-weight: 700;
+  opacity: 0.9;
+  padding-left: 0.25rem;
+  min-height: 0.8rem;
+}
+
+.add-btn-wide {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 0.85rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+}
+
+.add-btn-wide:active { transform: scale(0.98); opacity: 0.9; }
+
 .tag-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
 .glass-tag { background: var(--glass); padding: 0.35rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--glass-border); }
 .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -213,9 +257,9 @@ body {
 .modal-delete-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); width: 3.25rem; height: 3.25rem; border-radius: 0.85rem; font-size:1.25rem; display: flex; align-items:center; justify-content:center; cursor: pointer; }
 .modal-save-btn { flex: 1; background: linear-gradient(135deg, var(--accent), var(--accent-light)); border: none; color: #fff; padding: 1rem; border-radius: 0.85rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
 
-/* App Footer Signature */
+/* Global Footer Fix (v4.3) */
 .app-footer {
-  margin-top: 3.5rem;
+  margin: 3.5rem 0 2rem 0;
   padding: 1.5rem 0;
   text-align: center;
   border-top: 1px solid var(--glass-border);
@@ -226,7 +270,7 @@ body {
   font-family: 'Outfit', sans-serif;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.15em;
   color: var(--text-dim);
   text-transform: uppercase;
 }

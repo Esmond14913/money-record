@@ -84,4 +84,4 @@
 
 祝您出差順利，控帳輕鬆！
 
-**程式設計者：Esmond (v4.2 Premium)**
+**程式設計者：Esmond (v4.3 Premium)**

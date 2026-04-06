@@ -87,10 +87,18 @@
                 <div class="glass-card settings-group">
                     <h3 class="settings-title">幣別與匯率</h3>
                     <div id="currency-list" class="manager-list"></div>
-                    <div class="quick-add">
-                        <input type="text" id="new-currency-code" placeholder="代碼" class="glass-input">
-                        <input type="number" id="new-currency-rate" placeholder="匯率" class="glass-input">
-                        <button onclick="addCurrency()" class="add-btn-small">+</button>
+                    <div class="quick-add-wrap">
+                        <div class="input-row">
+                            <div class="input-field">
+                                <input type="text" id="new-currency-code" placeholder="代碼 (如 USD)" class="glass-input" oninput="handleCurrencyLookup()">
+                                <small id="currency-name-hint" class="input-hint">名稱將自動代入...</small>
+                            </div>
+                            <div class="input-field">
+                                <input type="number" id="new-currency-rate" placeholder="1 TWD : ?" class="glass-input">
+                                <small class="input-hint">輸入匯率值</small>
+                            </div>
+                        </div>
+                        <button onclick="addCurrency()" class="add-btn-wide">新增幣別</button>
                     </div>
                 </div>
 
@@ -119,12 +127,13 @@
                     <button onclick="confirmClearAll()" class="danger-btn-glass">🗑️ 清除所有記帳紀錄</button>
                 </div>
 
-                <footer class="app-footer">
-                    <p>Designed by Esmond</p>
-                    <span class="v-tag">v4.2 Premium</span>
-                </footer>
             </main>
         </div>
+
+        <footer class="app-footer">
+            <p>Designed by Esmond</p>
+            <span class="v-tag">v4.3 Premium</span>
+        </footer>
 
         <!-- Sticky Footer Nav -->
         <nav class="footer-nav">
