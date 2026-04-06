@@ -105,9 +105,11 @@
                 <div class="glass-card settings-group">
                     <h3 class="settings-title">類別自定義</h3>
                     <div id="category-list" class="tag-cloud"></div>
-                    <div class="quick-add">
-                        <input type="text" id="new-category-name" placeholder="新名稱" class="glass-input">
-                        <button onclick="addCategory()" class="add-btn-small">+</button>
+                    <div class="quick-add-wrap">
+                        <div class="input-row" style="grid-template-columns: 2.2fr 1fr;">
+                            <input type="text" id="new-category-name" placeholder="分類名稱" class="glass-input">
+                            <button onclick="addCategory()" class="add-btn-wide" style="padding:0; min-height: 2.8rem;">新增</button>
+                        </div>
                     </div>
                 </div>
 

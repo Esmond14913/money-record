@@ -192,6 +192,21 @@ body {
   background: rgba(255,255,255,0.02); border-radius: 0.85rem; font-size: 0.85rem;
 }
 
+.glass-input { 
+  width: 100%;
+  max-width: 100%;
+  background: rgba(255,255,255,0.05) !important; 
+  border: 1px solid var(--glass-border) !important; 
+  border-radius: 0.85rem; 
+  padding: 0.75rem 0.85rem; 
+  color: #fff !important; 
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  display: block;
+}
+.glass-input::placeholder { color: var(--text-dim); opacity: 0.4; }
+.glass-input:focus { border-color: var(--accent) !important; background: rgba(255,255,255,0.08) !important; }
+
 /* Management Quick Add Optimized (v4.3) */
 .quick-add-wrap {
   display: flex;
