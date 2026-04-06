@@ -1,4 +1,4 @@
-// --- State Management (v4.2) ---
+// --- State Management (v4.3) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
@@ -25,7 +25,19 @@ const icons = {
 document.addEventListener('DOMContentLoaded', () => {
   initUI();
   setupNav();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+  
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const installingWorker = reg.installing;
+        installingWorker.addEventListener('statechange', () => {
+          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            window.location.reload();
+          }
+        });
+      });
+    });
+  }
 });
 
 function initUI() {

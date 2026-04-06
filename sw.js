@@ -1,4 +1,4 @@
-const CACHE_NAME = 'money-record-v2';
+const CACHE_NAME = 'money-record-v4.3';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // 強制跳過等待，立即更新
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -18,9 +19,12 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
-    })
+    Promise.all([
+      self.clients.claim(), // 立即取得頁面控制權
+      caches.keys().then((keys) => {
+        return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+      })
+    ])
   );
 });
 
