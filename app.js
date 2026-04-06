@@ -277,6 +277,43 @@ window.openManual = () => {
   overlay.style.display = 'flex';
 };
 
+window.checkUpdate = () => {
+  const btn = document.getElementById('check-update-btn');
+  const status = document.getElementById('update-status');
+  if (!btn || !('serviceWorker' in navigator)) return;
+  
+  btn.innerText = '🔍 正在搜尋更新中...';
+  status.innerText = '正在對比伺服器版本，請稍候...';
+  
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (!reg) {
+      status.innerText = '未偵測到離線註冊，請連結網路重開。';
+      btn.innerText = '🔄 檢查系統更新';
+      return;
+    }
+    
+    reg.update().then(() => {
+      // 若已有正在安裝或等待中的新版
+      if (reg.installing || reg.waiting) {
+        status.innerText = '✅ 發現新版本！正在同步數據與套用更新...';
+        status.style.color = 'var(--success)';
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        // 如果伺服器檔案完全沒變（hash 一致）
+        btn.innerText = '✨ 已是最新版本';
+        status.innerText = '恭喜！您的 App 目前已是全球同步的最新版本。';
+        status.style.color = 'var(--text-dim)';
+        setTimeout(() => {
+          btn.innerText = '🔄 檢查系統更新 (Manual Update)';
+        }, 4000);
+      }
+    }).catch(err => {
+      status.innerText = '⚠️ 檢查失敗 (請確認網路或 GitHub 狀態)';
+      btn.innerText = '🔄 檢查系統更新';
+    });
+  });
+};
+
 function openModal(id = null) {
   state.editingId = id;
   const exp = id ? state.expenses.find(e => e.id === id) : null;
