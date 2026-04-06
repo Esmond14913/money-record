@@ -1,4 +1,4 @@
-// --- State Management (v4.4.1) ---
+// --- State Management (v4.4.2) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
@@ -12,6 +12,16 @@ let state = {
   currentView: 'home',
   editingId: null
 };
+
+// 自動修正舊有的錯誤匯率 (Migration v4.4.2)
+let needsSave = false;
+state.currencies = state.currencies.map(c => {
+  if (c.code === 'USD' && c.rate > 1) { c.rate = 0.031; needsSave = true; }
+  if (c.code === 'CNY' && c.rate > 1) { c.rate = 0.22; needsSave = true; }
+  if (c.code === 'JPY' && (c.rate < 1 || c.rate === 32)) { c.rate = 4.7; needsSave = true; }
+  return c;
+});
+if (needsSave) saveState();
 
 // Icons
 const icons = {
