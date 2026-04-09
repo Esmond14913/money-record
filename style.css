@@ -309,6 +309,43 @@ body {
 
 .m-item strong { color: var(--accent-light); }
 
+/* Quick Tags (v4.5) */
+.quick-tag-pills {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding-bottom: 0.3rem;
+  scrollbar-width: none;
+}
+.quick-tag-pills::-webkit-scrollbar { display: none; }
+
+.tag-pill {
+  white-space: nowrap;
+  padding: 0.35rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+
+.tag-pill:active {
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.tag-pill.recent {
+  border-color: var(--secondary);
+  color: var(--secondary);
+  background: rgba(147, 112, 219, 0.1);
+}
+
 /* Global Footer Fix (v4.3) */
 .app-footer {
   margin: 3.5rem 0 2rem 0;

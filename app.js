@@ -1,4 +1,4 @@
-// --- State Management (v4.4.2) ---
+// --- State Management (v4.5) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
@@ -13,7 +13,7 @@ let state = {
   editingId: null
 };
 
-// 自動修正舊有的錯誤匯率 (Migration v4.4.2)
+// 自動修正 (Migration v4.5)
 let needsSave = false;
 state.currencies = state.currencies.map(c => {
   if (c.code === 'USD' && c.rate > 1) { c.rate = 0.031; needsSave = true; }
@@ -22,6 +22,28 @@ state.currencies = state.currencies.map(c => {
   return c;
 });
 if (needsSave) saveState();
+
+// Quick Tag Logic (v4.5)
+window.renderQuickTags = () => {
+  const container = document.getElementById('quick-tags-container');
+  if (!container || state.expenses.length === 0) return;
+  const allTags = state.expenses.slice(-50).map(e => e.tag?.trim()).filter(t => t);
+  if (allTags.length === 0) return;
+  const freq = {};
+  allTags.forEach(t => freq[t] = (freq[t] || 0) + 1);
+  const sorted = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
+  const recentTag = state.expenses[state.expenses.length - 1]?.tag?.trim();
+  let finalTags = [...new Set([recentTag, ...sorted])].filter(t => t).slice(0, 5);
+  container.innerHTML = finalTags.map(tag => {
+    const isRecent = tag === recentTag;
+    return `<div class="tag-pill ${isRecent ? 'recent' : ''}" onclick="window.applyQuickTag('${tag.replace(/'/g, "\\'")}')">${isRecent ? '🕒 ' : ''}${tag}</div>`;
+  }).join('');
+};
+
+window.applyQuickTag = (val) => {
+  const input = document.getElementById('tag');
+  if (input) { input.value = val; input.focus(); }
+};
 
 // Icons
 const icons = {
@@ -333,6 +355,10 @@ function openModal(id = null) {
   const temp = document.getElementById('form-template').content.cloneNode(true);
   content.innerHTML = '';
   content.appendChild(temp);
+  
+  // Render Quick Tags (v4.5)
+  window.renderQuickTags();
+
   const curSel = document.getElementById('currency-select');
   curSel.innerHTML = state.currencies.map(c => `<option value="${c.code}" ${exp?.currency === c.code ? 'selected' : (c.code==='VND'?'selected':'')}>${c.name} (${c.code})</option>`).join('');
   const catGrid = document.getElementById('form-category-grid');
