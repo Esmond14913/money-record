@@ -107,7 +107,7 @@
 
                 <div class="glass-card settings-group">
                     <h3 class="settings-title">資料管理與備份</h3>
-                    <input type="email" id="export-email" placeholder="備份信箱" class="glass-input" style="width:100%; margin-bottom:1rem;">
+                    <input type="email" id="export-email" placeholder="備份信箱" class="glass-input" style="width:100%; margin-bottom:1rem;" oninput="state.exportEmail=this.value; saveState();">
                     <div class="btn-grid">
                         <button onclick="exportData()" class="action-btn-glass">📤 匯出備份</button>
                         <label class="action-btn-glass">

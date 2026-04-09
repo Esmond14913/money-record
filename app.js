@@ -92,6 +92,10 @@ function updateDashboard() {
   const homeTotal = document.getElementById('total-home');
   if (homeTotal) homeTotal.innerText = Math.round(totalTwd).toLocaleString();
   
+  // Restore Email Input value if it exists (v4.5.1 Fix)
+  const emailInput = document.getElementById('export-email');
+  if (emailInput && state.exportEmail) emailInput.value = state.exportEmail;
+  
   // Dynamic Foreign Totals (v4.4)
   const dynamicInfo = document.getElementById('dynamic-exchange-info');
   if (dynamicInfo) {
