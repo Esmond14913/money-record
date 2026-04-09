@@ -1,4 +1,4 @@
-// --- State Management (v4.5) ---
+// --- State Management (v4.6) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
@@ -8,20 +8,11 @@ let state = {
     { code: 'USD', name: '美金', rate: 0.031 }
   ],
   categories: JSON.parse(localStorage.getItem('mr_v4_cat')) || ['餐飲', '交通', '雜支', '住宿', '購物'],
-  exportEmail: localStorage.getItem('mr_v4_email') || '',
   currentView: 'home',
   editingId: null
 };
 
-// 自動修正 (Migration v4.5)
-let needsSave = false;
-state.currencies = state.currencies.map(c => {
-  if (c.code === 'USD' && c.rate > 1) { c.rate = 0.031; needsSave = true; }
-  if (c.code === 'CNY' && c.rate > 1) { c.rate = 0.22; needsSave = true; }
-  if (c.code === 'JPY' && (c.rate < 1 || c.rate === 32)) { c.rate = 4.7; needsSave = true; }
-  return c;
-});
-if (needsSave) saveState();
+// 自動修正 (Migration v4.6)
 
 // Quick Tag Logic (v4.5)
 window.renderQuickTags = () => {
@@ -84,17 +75,12 @@ function saveState() {
   localStorage.setItem('mr_v4_exp', JSON.stringify(state.expenses));
   localStorage.setItem('mr_v4_cur', JSON.stringify(state.currencies));
   localStorage.setItem('mr_v4_cat', JSON.stringify(state.categories));
-  localStorage.setItem('mr_v4_email', state.exportEmail);
 }
 
 function updateDashboard() {
   const totalTwd = state.expenses.reduce((s, e) => s + parseFloat(e.homeAmount), 0);
   const homeTotal = document.getElementById('total-home');
   if (homeTotal) homeTotal.innerText = Math.round(totalTwd).toLocaleString();
-  
-  // Restore Email Input value if it exists (v4.5.1 Fix)
-  const emailInput = document.getElementById('export-email');
-  if (emailInput && state.exportEmail) emailInput.value = state.exportEmail;
   
   // Dynamic Foreign Totals (v4.4)
   const dynamicInfo = document.getElementById('dynamic-exchange-info');
@@ -413,7 +399,7 @@ window.exportData = async () => {
   const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const filename = `出差紀錄_${new Date().toISOString().split('T')[0]}.xlsx`;
-  if (navigator.share) { try { await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: '記帳備份', text: `發送至: ${state.exportEmail}` }); } catch { download(blob, filename); } } else { download(blob, filename); }
+  if (navigator.share) { try { await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: '記帳備份', text: '出差記帳數據匯出' }); } catch { download(blob, filename); } } else { download(blob, filename); }
 };
 window.importData = (e) => {
   const file = e.target.files[0]; if (!file) return;
