@@ -192,6 +192,12 @@ body {
   background: rgba(255,255,255,0.02); border-radius: 0.85rem; font-size: 0.85rem;
 }
 
+/* Alternate Background for Date Groups (v4.7) */
+.record-item.alt-date {
+    background: rgba(147, 112, 219, 0.06); /* Subtle purple light */
+    border-color: rgba(147, 112, 219, 0.15);
+}
+
 .glass-input { 
   width: 100%;
   max-width: 100%;

@@ -1,4 +1,4 @@
-// --- State Management (v4.6) ---
+// --- State Management (v4.7) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
@@ -141,20 +141,38 @@ function renderExpenses() {
     list.innerHTML = `<div style="text-align:center; padding:4rem 0; color:var(--text-dim); opacity:0.5;">尚無紀錄，點擊下方「+」開始</div>`;
     return;
   }
-  const sorted = [...state.expenses].sort((a,b) => new Date(b.date) - new Date(a.date));
-  list.innerHTML = sorted.map(exp => `
-    <div class="record-item" onclick="openModal('${exp.id}')">
-      <div class="cat-icon-wrap">${icons[exp.category] || icons.default}</div>
-      <div style="flex:1;">
-        <div style="font-weight:700; font-size:1rem;">${exp.category}</div>
-        <div style="font-size:0.75rem; color:var(--text-dim); font-weight:500;">${exp.tag || '備註...'} • ${exp.date}</div>
+  
+  // v4.7 Smart Sorting: Date DESC, then entry Timestamp DESC
+  const sorted = [...state.expenses].sort((a,b) => {
+    if (b.date !== a.date) return b.date.localeCompare(a.date);
+    return b.id.localeCompare(a.id);
+  });
+
+  let lastDate = null;
+  let useAltDate = false;
+
+  list.innerHTML = sorted.map(exp => {
+    // Detect date change to toggle background color group
+    if (exp.date !== lastDate) {
+      useAltDate = !useAltDate;
+      lastDate = exp.date;
+    }
+    const altClass = useAltDate ? 'alt-date' : '';
+
+    return `
+      <div class="record-item ${altClass}" onclick="openModal('${exp.id}')">
+        <div class="cat-icon-wrap">${icons[exp.category] || icons.default}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700; font-size:1rem;">${exp.category}</div>
+          <div style="font-size:0.75rem; color:var(--text-dim); font-weight:500;">${exp.tag || '備註...'} • ${exp.date}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:800; color:var(--text);">${parseFloat(exp.foreignAmount).toLocaleString()} ${exp.currency}</div>
+          <div style="font-size:0.7rem; color:var(--secondary); font-weight:700;">≈ ${Math.round(exp.homeAmount).toLocaleString()} TWD</div>
+        </div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-weight:800; color:var(--text);">${parseFloat(exp.foreignAmount).toLocaleString()} ${exp.currency}</div>
-        <div style="font-size:0.7rem; color:var(--secondary); font-weight:700;">≈ ${Math.round(exp.homeAmount).toLocaleString()} TWD</div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
