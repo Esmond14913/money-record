@@ -134,7 +134,7 @@
 
         <footer class="app-footer">
             <p>Designed by Esmond</p>
-            <span class="v-tag">v4.8 Premium</span>
+            <span class="v-tag">v4.9 Premium</span>
         </footer>
 
         <!-- Sticky Footer Nav -->
@@ -180,8 +180,16 @@
                     <select id="currency-select" class="glass-select"></select>
                 </div>
                 <div class="form-group">
-                    <label>消費金額</label>
-                    <input type="number" id="foreign-amount" class="glass-input" placeholder="0" required inputmode="numeric">
+                    <label>消費金額 <span id="calc-preview" class="calc-preview-text"></span></label>
+                    <div class="calc-input-row">
+                        <input type="text" id="foreign-amount" class="glass-input" placeholder="0" required inputmode="decimal" autocomplete="off">
+                        <div class="calc-ops">
+                            <button type="button" class="op-btn" onclick="insertOp('+')">+</button>
+                            <button type="button" class="op-btn" onclick="insertOp('-')">-</button>
+                            <button type="button" class="op-btn" onclick="insertOp('*')">×</button>
+                            <button type="button" class="op-btn" onclick="insertOp('/')">÷</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group">
@@ -235,7 +243,7 @@
                 <div class="m-item">資料完全存放在手機本地，不會上傳雲端，請定期備份 Excel。</div>
             </section>
             <div style="text-align:center; padding-top:1rem; opacity:0.5; font-size:0.7rem;">
-                Powered by Esmond v4.6
+                Powered by Esmond v4.9
             </div>
         </div>
     </template>

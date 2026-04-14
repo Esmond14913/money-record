@@ -1,4 +1,4 @@
-// --- State Management (v4.8) ---
+// --- State Management (v4.9) ---
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
@@ -35,6 +35,26 @@ window.applyQuickTag = (val) => {
   const input = document.getElementById('tag');
   if (input) { input.value = val; input.focus(); }
 };
+
+// Calculator Logic (v4.9)
+window.insertOp = (op) => {
+  const input = document.getElementById('foreign-amount');
+  if (!input) return;
+  input.value += op;
+  input.dispatchEvent(new Event('input'));
+  input.focus();
+};
+
+function safeEval(str) {
+  try {
+    // 移除非法字元，僅保留數字與運算子
+    const clean = str.replace(/[^-+*/().0-9]/g, '');
+    if (!clean) return 0;
+    // 使用 Function 建構子進行簡單運算 (比 eval 安全，因為已過濾字元)
+    const res = new Function(`return ${clean}`)();
+    return isFinite(res) ? parseFloat(res.toFixed(4)) : 0;
+  } catch { return null; }
+}
 
 // Icons
 const icons = {
@@ -392,12 +412,17 @@ function openModal(id = null) {
     e.preventDefault();
     const curCode = curSel.value;
     const rate = state.currencies.find(c => c.code === curCode).rate;
-    const foreignAmt = parseFloat(document.getElementById('foreign-amount').value);
+    
+    // Calculator: Process final math before saving
+    let rawVal = document.getElementById('foreign-amount').value;
+    let finalAmt = safeEval(rawVal);
+    if (finalAmt === null || isNaN(finalAmt)) finalAmt = parseFloat(rawVal) || 0;
+
     const data = {
       id: exp ? exp.id : Date.now().toString(),
       currency: curCode,
-      foreignAmount: foreignAmt,
-      homeAmount: foreignAmt / rate,
+      foreignAmount: finalAmt,
+      homeAmount: finalAmt / rate,
       category: catGrid.querySelector('.cat-opt.selected').dataset.cat,
       tag: document.getElementById('tag').value,
       date: document.getElementById('date').value
@@ -406,6 +431,22 @@ function openModal(id = null) {
     saveState(); closeModal(); initUI();
   };
   overlay.style.display = 'flex';
+
+  // Calculator Input Listener
+  const amountInput = document.getElementById('foreign-amount');
+  const preview = document.getElementById('calc-preview');
+  if (amountInput && preview) {
+    amountInput.oninput = () => {
+      const val = amountInput.value;
+      if (/[+\-*/]/.test(val)) {
+        const res = safeEval(val);
+        preview.innerText = (res !== null) ? `= ${res}` : '算式錯誤';
+        preview.style.display = 'inline';
+      } else {
+        preview.style.display = 'none';
+      }
+    };
+  }
 }
 window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; state.editingId = null; };
 
