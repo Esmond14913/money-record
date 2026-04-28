@@ -1,4 +1,4 @@
-const CACHE_NAME = 'money-record-v4.9';
+const CACHE_NAME = 'money-record-v5.0';
 const ASSETS = [
   './',
   './index.html',
