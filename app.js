@@ -19,9 +19,9 @@ if ('serviceWorker' in navigator) {
   });
 }
 let state = {
-  expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
-  categories: JSON.parse(localStorage.getItem('mr_v4_cat')) || ['餐飲', '交通', '住宿', '購物', '其他'],
-  currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
+  expenses: JSON.parse(localStorage.getItem('mr_v5_exp')) || [],
+  categories: JSON.parse(localStorage.getItem('mr_v5_cat')) || ['餐飲', '交通', '住宿', '購物', '其他'],
+  currencies: JSON.parse(localStorage.getItem('mr_v5_cur')) || [
     { code: 'TWD', rate: 1, name: '台幣' },
     { code: 'USD', rate: 0.031, name: '美金' },
     { code: 'VND', rate: 820, name: '越南盾' },
@@ -29,8 +29,8 @@ let state = {
     { code: 'KRW', rate: 41.5, name: '韓元' },
     { code: 'CNY', rate: 0.22, name: '人民幣' }
   ],
-  homeCurrency: localStorage.getItem('mr_v4_home') || 'TWD',
-  defaultEntryCurrency: localStorage.getItem('mr_v4_def_cur') || 'VND', // 預設記帳幣別
+  homeCurrency: localStorage.getItem('mr_v5_home') || 'TWD',
+  defaultEntryCurrency: localStorage.getItem('mr_v5_def_cur') || 'VND', // 預設記帳幣別
   currentView: 'home',
   editingId: null,
   version: 'v5.1.2' // 動態版號
@@ -61,11 +61,11 @@ function convertToHome(amt, from) {
 }
 
 function saveState() {
-  localStorage.setItem('mr_v4_exp', JSON.stringify(state.expenses));
-  localStorage.setItem('mr_v4_cur', JSON.stringify(state.currencies));
-  localStorage.setItem('mr_v4_cat', JSON.stringify(state.categories));
-  localStorage.setItem('mr_v4_home', state.homeCurrency);
-  localStorage.setItem('mr_v4_def_cur', state.defaultEntryCurrency);
+  localStorage.setItem('mr_v5_exp', JSON.stringify(state.expenses));
+  localStorage.setItem('mr_v5_cur', JSON.stringify(state.currencies));
+  localStorage.setItem('mr_v5_cat', JSON.stringify(state.categories));
+  localStorage.setItem('mr_v5_home', state.homeCurrency);
+  localStorage.setItem('mr_v5_def_cur', state.defaultEntryCurrency);
 }
 
 function initUI() {
