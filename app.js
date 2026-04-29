@@ -68,11 +68,13 @@ function saveState() {
 }
 
 function initUI() {
-  // 自動補齊遺漏的預設幣別 (USD, KRW)
+  // 自動補齊並置頂預設幣別 (TWD 優先)
   const defaults = [
+    { code: 'TWD', rate: 1, name: '台幣' },
     { code: 'USD', rate: 0.031, name: '美金' },
     { code: 'KRW', rate: 41.5, name: '韓元' }
   ];
+  
   let changed = false;
   defaults.forEach(d => {
     if (!state.currencies.find(c => c.code === d.code)) {
@@ -80,6 +82,14 @@ function initUI() {
       changed = true;
     }
   });
+
+  // 強制將 TWD 置頂
+  state.currencies.sort((a, b) => {
+    if (a.code === 'TWD') return -1;
+    if (b.code === 'TWD') return 1;
+    return 0;
+  });
+
   if (changed) saveState();
 
   updateDashboard();
