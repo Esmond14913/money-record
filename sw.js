@@ -1,37 +1,21 @@
-const CACHE_NAME = 'money-record-v5.0';
+const CACHE_NAME = 'mr-pwa-v5.1';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
-  'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js'
+  './icon-192.png'
 ];
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting(); // 強制跳過等待，立即更新
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    Promise.all([
-      self.clients.claim(), // 立即取得頁面控制權
-      caches.keys().then((keys) => {
-        return Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
-      })
-    ])
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
   );
 });

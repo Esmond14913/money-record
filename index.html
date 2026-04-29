@@ -2,39 +2,29 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>出差記帳助手 - 純淨精品版</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>出差記帳助手 - 動態貨幣版 v5.1</title>
     <link rel="stylesheet" href="style.css">
-    <meta name="theme-color" content="#0a0a0f">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon-192.png">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <!-- Content Area -->
         <div id="content-area">
-            
             <!-- Page: Home (明細) -->
             <main id="page-home" class="page active">
                 <header class="dashboard">
                     <div class="dash-inner">
-                        <span class="total-label">出差總支出 (TWD)</span>
+                        <span class="total-label">出差總支出 (<span id="home-currency-label">TWD</span>)</span>
                         <div class="total-amount">
                             <span class="currency-symbol">$</span>
-                            <span id="total-home">0</span>
+                            <span id="total-amount">0</span>
                         </div>
-                        <div id="dynamic-exchange-info" class="exchange-info">
-                            <!-- Dynamic blocks will be injected here -->
-                        </div>
+                        <div id="dynamic-exchange-info" class="exchange-info"></div>
                     </div>
                 </header>
-                
                 <div class="section-header">
                     <h2>消費明細</h2>
                     <span class="item-count" id="item-count">0 筆</span>
@@ -45,124 +35,125 @@
             <!-- Page: Stats (分析) -->
             <main id="page-stats" class="page">
                 <div class="section-header" style="margin-top:1rem;">
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <h2>統計分析</h2>
-                    </div>
-                    <span class="stat-summary" id="stat-total-info">總計 $0</span>
+                    <h2>統計分析</h2>
+                    <span class="stat-summary" id="stat-total-info">總計約 $0</span>
                 </div>
-                
                 <div class="glass-card pie-section">
                     <h3 class="card-subtitle">類別佔比分析</h3>
                     <div id="category-pie" class="pie-chart"></div>
                     <div id="category-legend" class="pie-legend"></div>
                 </div>
 
-                <div class="section-header" style="margin-top:2rem;">
-                    <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-dim);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <h2 style="font-size:1rem;">每日總花費趨勢 (TWD)</h2>
-                    </div>
-                </div>
-                
-                <div class="chart-scroll-box">
-                    <div id="daily-bars" class="vertical-bar-container">
-                        <!-- Vertical bars injected here -->
-                    </div>
+                <div class="glass-card">
+                    <h3 class="card-subtitle">每日支出趨勢</h3>
+                    <div id="daily-bar-chart" class="daily-chart-container"></div>
                 </div>
             </main>
 
             <!-- Page: Settings (管理) -->
             <main id="page-settings" class="page">
                 <div class="section-header" style="margin-top:1rem;">
-                    <h2>系統管理</h2>
+                    <h2>貨幣與結算中心 (V5.1)</h2>
                 </div>
-
-                <div class="glass-card settings-group">
-                    <h3 class="settings-title">幣別與匯率</h3>
-                    <div id="currency-list" class="manager-list"></div>
-                    <div class="quick-add-wrap">
-                        <div class="input-row">
-                            <div class="input-field">
-                                <input type="text" id="new-currency-code" placeholder="代碼 (如 USD)" class="glass-input" oninput="handleCurrencyLookup()">
-                                <small id="currency-name-hint" class="input-hint">名稱將自動代入...</small>
-                            </div>
-                            <div class="input-field">
-                                <input type="number" id="new-currency-rate" placeholder="1 TWD : ?" class="glass-input">
-                                <small class="input-hint">輸入匯率值</small>
-                            </div>
-                        </div>
-                        <button onclick="addCurrency()" class="add-btn-wide">新增幣別</button>
+                
+                <div class="glass-card" style="padding:1rem;">
+                    <table class="currency-table">
+                        <thead>
+                            <tr>
+                                <th>幣別</th>
+                                <th>匯率 (1 TWD=?)</th>
+                                <th>結算</th>
+                                <th style="text-align:right;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="currency-table-body"></tbody>
+                    </table>
+                    <div class="currency-add-row">
+                        <input type="text" id="new-currency-code" class="glass-input" placeholder="代碼 (如: USD)">
+                        <input type="number" id="new-currency-rate" class="glass-input" placeholder="匯率值 (1 TWD = ?)">
                     </div>
+                    <button class="add-btn-wide" style="margin-top:0.8rem;" onclick="window.addCurrency()">新增幣別</button>
                 </div>
 
-                <div class="glass-card settings-group">
-                    <h3 class="settings-title">類別自定義</h3>
+                <div class="glass-card">
+                    <h3 class="card-subtitle">類別設定</h3>
                     <div id="category-list" class="tag-cloud"></div>
-                    <div class="quick-add-wrap">
-                        <div class="input-row" style="grid-template-columns: 2.2fr 1fr;">
-                            <input type="text" id="new-category-name" placeholder="分類名稱" class="glass-input">
-                            <button onclick="addCategory()" class="add-btn-wide" style="padding:0; min-height: 2.8rem;">新增</button>
-                        </div>
+                    <div class="input-row" style="margin-top:1rem;">
+                        <input type="text" id="new-category-name" class="glass-input" placeholder="新增類別名稱...">
+                        <button class="add-btn-wide" onclick="window.addCategory()">新增</button>
                     </div>
                 </div>
 
-                <div class="glass-card settings-group">
-                    <h3 class="settings-title">資料管理與備份</h3>
+                <div class="glass-card">
+                    <h3 class="card-subtitle">數據管理</h3>
                     <div class="btn-grid">
-                        <button onclick="exportData()" class="action-btn-glass">📤 匯出備份</button>
-                        <label class="action-btn-glass">
-                            📥 匯入資料
-                            <input type="file" id="import-file" accept=".xlsx" style="display:none;" onchange="importData(event)">
-                        </label>
+                        <button class="action-btn-glass" onclick="window.exportData()">匯出 Excel</button>
+                        <button class="action-btn-glass" onclick="document.getElementById('import-file').click()">匯入資料</button>
+                        <input type="file" id="import-file" accept=".xlsx" style="display:none;" onchange="window.importData(event)">
+                    </div>
+                    <button class="danger-btn-glass" style="margin-top:1rem;" onclick="window.confirmClearAll()">清空所有紀錄</button>
+                </div>
+
+                <footer class="app-footer">
+                    <p>Designed by Esmond</p>
+                    <span class="v-tag">v5.1 Premium</span>
+                </footer>
+            </main>
+
+            <!-- Page: Guide (說明) -->
+            <main id="page-guide" class="page">
+                <div class="section-header" style="margin-top:1rem;">
+                    <h2>使用說明</h2>
+                </div>
+                <div class="glass-card guide-content">
+                    <div class="guide-section" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+                        <h4>📱 如何安裝到手機</h4>
+                        <p>1. 使用 <b>Safari (iOS)</b> 或 <b>Chrome (Android)</b> 開啟網頁。</p>
+                        <p>2. 點擊分享按鈕或選單，選擇 <b>「加入主畫面」</b>。</p>
+                        <p>3. 此 App 即會出現在桌面，像原生應用一樣快速開啟。</p>
+                    </div>
+                    <div class="guide-section">
+                        <h4>🌍 雙幣別系統</h4>
+                        <p><b>結算主幣</b>：決定總額顯示單位 (建議 TWD)。</p>
+                        <p><b>預設記帳</b>：新增紀錄時的初始幣別 (出差當地幣別)。</p>
+                    </div>
+                    <div class="guide-section">
+                        <h4>📈 統計圖表</h4>
+                        <p>直條圖由左向右顯示日期，<b>今天在最右側</b>。向左滑動可看歷史。</p>
+                    </div>
+                    <div class="guide-section">
+                        <h4>⚙️ 管理功能</h4>
+                        <p>點擊表格中的<b>匯率比值</b>即可修改。支援 Excel 匯入/匯出。</p>
                     </div>
                 </div>
-
-                <div class="glass-card settings-group">
-                    <h3 class="settings-title">幫助與支援</h3>
-                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
-                        <button onclick="openManual()" class="action-btn-glass" style="width:100%; border-color:var(--secondary); color:var(--secondary); font-weight:800;">📖 快速使用指南 (User Manual)</button>
-                        <button id="check-update-btn" onclick="checkUpdate()" class="action-btn-glass" style="width:100%; border-color:var(--accent); color:var(--accent-light); font-weight:800;">🔄 檢查系統更新 (Manual Update)</button>
-                        <div id="update-status" style="font-size:0.65rem; color:var(--text-dim); text-align:center; opacity:0.6;">目前的版本過舊時，請點擊上方按鈕。</div>
-                    </div>
-                </div>
-
-                <div style="padding: 0 1rem;">
-                    <button onclick="confirmClearAll()" class="danger-btn-glass">🗑️ 清除所有記帳紀錄</button>
-                </div>
-
             </main>
         </div>
 
-        <footer class="app-footer">
-            <p>Designed by Esmond</p>
-            <span class="v-tag">v5.0 Premium</span>
-        </footer>
-
-        <!-- Sticky Footer Nav -->
         <nav class="footer-nav">
-            <button class="nav-item active" data-page="home">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <button class="nav-item active" data-page="home" onclick="state.currentView='home'; renderCurrentPage();">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 <span>明細</span>
             </button>
-            <button class="nav-item" data-page="stats">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <button class="nav-item" data-page="stats" onclick="state.currentView='stats'; renderCurrentPage();">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 <span>分析</span>
             </button>
-            
-            <div class="action-trigger" id="add-btn-main">
+            <div class="action-trigger" id="add-btn-main" onclick="window.openModal()">
                 <div class="glow-bg"></div>
                 <div class="main-add-btn">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </div>
             </div>
-
-            <button class="nav-item" data-page="settings">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <button class="nav-item" data-page="settings" onclick="state.currentView='settings'; renderCurrentPage();">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 <span>管理</span>
+            </button>
+            <button class="nav-item" data-page="guide" onclick="state.currentView='guide'; renderCurrentPage();">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>說明</span>
             </button>
         </nav>
 
-        <!-- Global Modals Area -->
         <div id="modal-overlay" class="modal-overlay">
             <div id="modal-content" class="modal-content glass-card"></div>
         </div>
@@ -172,81 +163,34 @@
     <template id="form-template">
         <div class="modal-header">
             <h3 id="modal-title">記帳</h3>
-            <button onclick="closeModal()" class="close-icon-btn">✕</button>
+            <button class="close-icon-btn" onclick="window.closeModal()">✕</button>
         </div>
         <form id="expense-form">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>幣別</label>
-                    <select id="currency-select" class="glass-select"></select>
-                </div>
-                <div class="form-group">
-                    <label>消費金額 <span id="calc-preview" class="calc-preview-text"></span></label>
-                    <div class="calc-input-row">
-                        <input type="text" id="foreign-amount" class="glass-input" placeholder="0" required inputmode="decimal" autocomplete="off">
-                        <div class="calc-ops">
-                            <button type="button" class="op-btn" onclick="insertOp('+')">+</button>
-                            <button type="button" class="op-btn" onclick="insertOp('-')">-</button>
-                            <button type="button" class="op-btn" onclick="insertOp('*')">×</button>
-                            <button type="button" class="op-btn" onclick="insertOp('/')">÷</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label>金額</label>
+                <input type="number" id="amount" class="glass-input" step="0.01" required>
             </div>
             <div class="form-group">
-                <label>選擇分類</label>
+                <label>幣別</label>
+                <select id="currency-select" class="glass-select"></select>
+            </div>
+            <div class="form-group">
+                <label>類別</label>
                 <div id="form-category-grid" class="category-selector-grid"></div>
             </div>
             <div class="form-group">
-                <label>備註紀錄</label>
-                <input type="text" id="tag" class="glass-input" placeholder="例如：飯店午餐...">
-                <div id="quick-tags-container" class="quick-tag-pills"></div>
+                <label>備註 (Tag)</label>
+                <input type="text" id="tag" class="glass-input">
             </div>
             <div class="form-group">
-                <label>消費日期</label>
-                <input type="date" id="date" class="glass-input">
+                <label>日期</label>
+                <input type="date" id="date" class="glass-input" required>
             </div>
             <div class="modal-actions">
                 <button type="button" id="delete-record-btn" class="modal-delete-btn" style="display:none;">🗑️</button>
                 <button type="submit" class="modal-save-btn">儲存紀錄</button>
             </div>
         </form>
-    </template>
-
-    <!-- Project Manual Template -->
-    <template id="manual-template">
-        <div class="modal-header">
-            <h3>📖 使用指南</h3>
-            <button onclick="closeModal()" class="close-icon-btn">✕</button>
-        </div>
-        <div class="manual-content">
-            <section class="m-section">
-                <h4>🚀 安裝到手機 (PWA)</h4>
-                <div class="m-item"><strong>安卓 (Chrome)：</strong> 點擊「⋮」>「安裝應用程式」</div>
-                <div class="m-item"><strong>iPhone (Safari)：</strong> 點擊分享鈕「↑」>「加入主畫面」</div>
-            </section>
-            <section class="m-section">
-                <h4>🛠️ 設定匯率與類別</h4>
-                <div class="m-item">在「管理」分頁，可新增自定義記帳類別與設定參考匯率。</div>
-            </section>
-            <section class="m-section">
-                <h4>💰 如何記帳</h4>
-                <div class="m-item">點擊「+」大按鈕，選擇幣別、輸入金額、選擇分類並儲存即可。</div>
-                <div class="m-item">點擊首頁列表可進入「編輯模式」修改或刪除。</div>
-            </section>
-            <section class="m-section">
-                <h4>💾 備份與還原 (極重要)</h4>
-                <div class="m-item">設定備份信箱後點擊「匯出備份」存成 Excel。</div>
-                <div class="m-item">換手機時，點擊「匯入資料」選取該 Excel 即可一鍵還原。</div>
-            </section>
-            <section class="m-section">
-                <h4>🛡️ 隱私聲明</h4>
-                <div class="m-item">資料完全存放在手機本地，不會上傳雲端，請定期備份 Excel。</div>
-            </section>
-            <div style="text-align:center; padding-top:1rem; opacity:0.5; font-size:0.7rem;">
-                Powered by Esmond v5.0
-            </div>
-        </div>
     </template>
 
     <script src="app.js"></script>

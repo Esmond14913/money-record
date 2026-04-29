@@ -1,486 +1,305 @@
-// --- State Management (v5.0) ---
+// ---------------------------------------------------------
+// 1. Core State & Initialization (PWA Enabled)
+// ---------------------------------------------------------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW Registered!', reg);
+    }).catch(err => {
+      console.log('SW Registration Failed:', err);
+    });
+  });
+}
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
+  categories: JSON.parse(localStorage.getItem('mr_v4_cat')) || ['餐飲', '交通', '住宿', '購物', '其他'],
   currencies: JSON.parse(localStorage.getItem('mr_v4_cur')) || [
-    { code: 'VND', name: '越南盾', rate: 820 },
-    { code: 'JPY', name: '日圓', rate: 4.7 },
-    { code: 'CNY', name: '人民幣', rate: 0.22 },
-    { code: 'USD', name: '美金', rate: 0.031 }
+    { code: 'TWD', rate: 1, name: '台幣' },
+    { code: 'USD', rate: 0.031, name: '美金' },
+    { code: 'VND', rate: 820, name: '越南盾' },
+    { code: 'JPY', rate: 4.7, name: '日圓' },
+    { code: 'KRW', rate: 41.5, name: '韓元' },
+    { code: 'CNY', rate: 0.22, name: '人民幣' }
   ],
-  categories: JSON.parse(localStorage.getItem('mr_v4_cat')) || ['餐飲', '交通', '雜支', '住宿', '購物'],
+  homeCurrency: localStorage.getItem('mr_v4_home') || 'TWD',
+  defaultEntryCurrency: localStorage.getItem('mr_v4_def_cur') || 'VND', // 預設記帳幣別
   currentView: 'home',
   editingId: null
 };
 
-// 自動修正 (Migration v4.6)
-
-// Quick Tag Logic (v4.5)
-window.renderQuickTags = () => {
-  const container = document.getElementById('quick-tags-container');
-  if (!container || state.expenses.length === 0) return;
-  const allTags = state.expenses.slice(-50).map(e => e.tag?.trim()).filter(t => t);
-  if (allTags.length === 0) return;
-  const freq = {};
-  allTags.forEach(t => freq[t] = (freq[t] || 0) + 1);
-  const sorted = Object.keys(freq).sort((a,b) => freq[b] - freq[a]);
-  const recentTag = state.expenses[state.expenses.length - 1]?.tag?.trim();
-  let finalTags = [...new Set([recentTag, ...sorted])].filter(t => t).slice(0, 5);
-  container.innerHTML = finalTags.map(tag => {
-    const isRecent = tag === recentTag;
-    return `<div class="tag-pill ${isRecent ? 'recent' : ''}" onclick="window.applyQuickTag('${tag.replace(/'/g, "\\'")}')">${isRecent ? '🕒 ' : ''}${tag}</div>`;
-  }).join('');
-};
-
-window.applyQuickTag = (val) => {
-  const input = document.getElementById('tag');
-  if (input) { input.value = val; input.focus(); }
-};
-
-// Calculator Logic (v4.9)
-window.insertOp = (op) => {
-  const input = document.getElementById('foreign-amount');
-  if (!input) return;
-  input.value += op;
-  input.dispatchEvent(new Event('input'));
-  input.focus();
-};
-
-function safeEval(str) {
-  try {
-    // 移除非法字元，僅保留數字與運算子
-    const clean = str.replace(/[^-+*/().0-9]/g, '');
-    if (!clean) return 0;
-    // 使用 Function 建構子進行簡單運算 (比 eval 安全，因為已過濾字元)
-    const res = new Function(`return ${clean}`)();
-    return isFinite(res) ? parseFloat(res.toFixed(4)) : 0;
-  } catch { return null; }
-}
-
-// Icons
-const icons = {
-  '餐飲': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
-  '交通': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="22" height="13" rx="2"></rect><path d="M7 21h10"></path><line x1="12" y1="16" x2="12" y2="21"></line></svg>`,
-  '雜支': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
-  '住宿': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>`,
-  '購物': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M17 17H6.15a2 2 0 0 1-1.95-1.55L3.1 4.5A2 2 0 0 0 1.15 3H1"></path><path d="m22 5-1.5 9h-12"></path></svg>`,
-  'default': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
-};
+const icons = { '餐飲': '🍴', '交通': '🚗', '住宿': '🏨', '購物': '🛍️', '其他': '📦', 'default': '💰' };
+const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
 
 document.addEventListener('DOMContentLoaded', () => {
-  initUI();
-  setupNav();
-  
+  // 徹底移除 Service Worker 註冊，防止自動刷新
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const installingWorker = reg.installing;
-        installingWorker.addEventListener('statechange', () => {
-          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            window.location.reload();
-          }
-        });
-      });
-    });
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
   }
+  initUI();
 });
 
-function initUI() {
-  updateDashboard();
-  renderCurrentPage();
-  renderCurrencyList();
-  renderCategoryList();
+// ---------------------------------------------------------
+// 2. Core Logic
+// ---------------------------------------------------------
+function getConversionRate(from, to) {
+  const f = state.currencies.find(c => c.code === from);
+  const t = state.currencies.find(c => c.code === to);
+  return (f && t) ? t.rate / f.rate : 1;
+}
+
+function convertToHome(amt, from) {
+  return (parseFloat(amt) || 0) * getConversionRate(from, state.homeCurrency);
 }
 
 function saveState() {
   localStorage.setItem('mr_v4_exp', JSON.stringify(state.expenses));
   localStorage.setItem('mr_v4_cur', JSON.stringify(state.currencies));
   localStorage.setItem('mr_v4_cat', JSON.stringify(state.categories));
+  localStorage.setItem('mr_v4_home', state.homeCurrency);
+  localStorage.setItem('mr_v4_def_cur', state.defaultEntryCurrency);
+}
+
+function initUI() {
+  // 自動補齊遺漏的預設幣別 (USD, KRW)
+  const defaults = [
+    { code: 'USD', rate: 0.031, name: '美金' },
+    { code: 'KRW', rate: 41.5, name: '韓元' }
+  ];
+  let changed = false;
+  defaults.forEach(d => {
+    if (!state.currencies.find(c => c.code === d.code)) {
+      state.currencies.push(d);
+      changed = true;
+    }
+  });
+  if (changed) saveState();
+
+  updateDashboard();
+  renderCurrentPage();
 }
 
 function updateDashboard() {
-  const totalTwd = state.expenses.reduce((s, e) => s + parseFloat(e.homeAmount), 0);
-  const homeTotal = document.getElementById('total-home');
-  if (homeTotal) homeTotal.innerText = Math.round(totalTwd).toLocaleString();
-  
-  // Dynamic Foreign Totals (v4.4)
-  const dynamicInfo = document.getElementById('dynamic-exchange-info');
-  if (dynamicInfo) {
-    if (state.expenses.length === 0) {
-      dynamicInfo.innerHTML = '<div class="info-block" style="opacity:0.3;"><span class="small-label">尚未有資料</span></div>';
-    } else {
-      // Get all unique foreign currencies used in expenses
-      const usedCodes = [...new Set(state.expenses.map(e => e.currency))];
-      
-      dynamicInfo.innerHTML = usedCodes.map((code, idx) => {
-        const total = state.expenses.filter(e => e.currency === code).reduce((s, e) => s + parseFloat(e.foreignAmount), 0);
-        const rateObj = state.currencies.find(c => c.code === code) || { rate: 1, name: code };
-        
-        return `
-          ${idx > 0 ? '<div class="info-divider"></div>' : ''}
-          <div class="info-block">
-            <span class="small-label">${rateObj.name}總額</span>
-            <span class="info-value">${Math.round(total).toLocaleString()} ${code}</span>
-            <small style="font-size:0.55rem; color:var(--secondary); font-weight:600; margin-top:1px; white-space:nowrap;">1 TWD : ${rateObj.rate}</small>
-          </div>
-        `;
-      }).join('');
-    }
+  const totalHome = state.expenses.reduce((s, e) => s + convertToHome(e.amount, e.currency), 0);
+  const el = document.getElementById('total-amount');
+  const lbl = document.getElementById('home-currency-label');
+  if (el) el.innerText = Math.round(totalHome).toLocaleString();
+  if (lbl) lbl.innerText = state.homeCurrency;
+
+  const info = document.getElementById('dynamic-exchange-info');
+  if (info) {
+    const codes = [...new Set(state.expenses.map(e => e.currency))];
+    info.innerHTML = codes.map((c, i) => {
+      const sum = state.expenses.filter(e => e.currency === c).reduce((s, e) => s + parseFloat(e.amount), 0);
+      const cur = state.currencies.find(cu => cu.code === c) || { rate: 1, name: c };
+      return `${i>0?'<div class="info-divider"></div>':''}<div class="info-block"><span class="small-label">${cur.name}</span><span class="info-value">${Math.round(sum).toLocaleString()} ${c}</span></div>`;
+    }).join('');
   }
-  
-  const itemCount = document.getElementById('item-count');
-  if (itemCount) itemCount.innerText = `${state.expenses.length} 筆紀錄`;
-
-  const statTotal = document.getElementById('stat-total-info');
-  if (statTotal) statTotal.innerText = `總支出: $${Math.round(totalTwd).toLocaleString()}`;
-}
-
-function setupNav() {
-  document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
-    btn.onclick = () => {
-      state.currentView = btn.dataset.page;
-      renderCurrentPage();
-    };
-  });
-  const addBtn = document.getElementById('add-btn-main');
-  if (addBtn) addBtn.onclick = () => openModal();
+  const count = document.getElementById('item-count');
+  if (count) count.innerText = `${state.expenses.length} 筆紀錄`;
 }
 
 function renderCurrentPage() {
-  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === `page-${state.currentView}`));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === state.currentView));
+  const pages = ['home', 'stats', 'settings', 'guide'];
+  pages.forEach(p => {
+    const el = document.getElementById(`page-${p}`);
+    if (el) el.style.display = (state.currentView === p) ? 'block' : 'none';
+  });
+  
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-page') === state.currentView);
+  });
 
-  if (state.currentView === 'home') renderExpenses();
+  if (state.currentView === 'home') { updateDashboard(); renderExpenses(); }
   if (state.currentView === 'stats') renderStats();
-  if (state.currentView === 'settings') renderSettings();
+  if (state.currentView === 'settings') { renderCurrencyTable(); renderCategoryList(); }
 }
 
 function renderExpenses() {
   const list = document.getElementById('record-list');
   if (!list) return;
-  if (state.expenses.length === 0) {
-    list.innerHTML = `<div style="text-align:center; padding:4rem 0; color:var(--text-dim); opacity:0.5;">尚無紀錄，點擊下方「+」開始</div>`;
-    return;
-  }
+  const sorted = [...state.expenses].sort((a,b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
   
-  // v4.7 Smart Sorting: Date DESC, then entry Timestamp DESC
-  const sorted = [...state.expenses].sort((a,b) => {
-    if (b.date !== a.date) return b.date.localeCompare(a.date);
-    return b.id.localeCompare(a.id);
-  });
-
   let lastDate = null;
   let useAltDate = false;
 
   list.innerHTML = sorted.map(exp => {
-    // Detect date change to toggle background color group
     if (exp.date !== lastDate) {
       useAltDate = !useAltDate;
       lastDate = exp.date;
     }
     const altClass = useAltDate ? 'alt-date' : '';
+    const val = convertToHome(exp.amount, exp.currency);
 
     return `
-      <div class="record-item ${altClass}" onclick="openModal('${exp.id}')">
+      <div class="record-item ${altClass}" onclick="window.openModal('${exp.id}')">
         <div class="cat-icon-wrap">${icons[exp.category] || icons.default}</div>
         <div style="flex:1;">
           <div style="font-weight:700; font-size:1rem;">${exp.category}</div>
-          <div style="font-size:0.75rem; color:var(--text-dim); font-weight:500;">${exp.tag || '備註...'} • ${exp.date}</div>
+          <div style="font-size:0.75rem; color:var(--text-dim); font-weight:500;">${exp.tag || ''} • ${exp.date}</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-weight:800; color:var(--text);">${parseFloat(exp.foreignAmount).toLocaleString()} ${exp.currency}</div>
-          <div style="font-size:0.7rem; color:var(--secondary); font-weight:700;">≈ ${Math.round(exp.homeAmount).toLocaleString()} TWD</div>
+          <div style="font-weight:800; color:var(--text);">${parseFloat(exp.amount).toLocaleString()} ${exp.currency}</div>
+          <div style="font-size:0.7rem; color:var(--secondary); font-weight:700;">≈ ${Math.round(val).toLocaleString()} ${state.homeCurrency}</div>
         </div>
       </div>
     `;
-  }).join('');
+  }).join('') || '<div style="text-align:center; padding:3rem; opacity:0.5;">尚無紀錄</div>';
 }
 
-const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6'];
-const currencyDict = {
-  'USD': '美金', 'CNY': '人民幣', 'VND': '越南盾', 'JPY': '日圓', 
-  'EUR': '歐元', 'GBP': '英鎊', 'HKD': '港幣', 'KRW': '韓元', 
-  'SGD': '新加坡幣', 'AUD': '澳幣', 'CAD': '加幣', 'THB': '泰銖',
-  'MOP': '澳門幣', 'PHP': '披索', 'MYR': '馬幣', 'IDR': '印尼盾'
-};
-
-window.handleCurrencyLookup = () => {
-  const code = document.getElementById('new-currency-code').value.toUpperCase().trim();
-  const hint = document.getElementById('currency-name-hint');
-  if (currencyDict[code]) {
-    hint.innerText = `偵測到：${currencyDict[code]}`;
-    hint.style.color = 'var(--success)';
-  } else {
-    hint.innerText = code ? '新幣別名稱 (手動)' : '名稱將自動代入...';
-    hint.style.color = 'var(--secondary)';
-  }
-};
-
 function renderStats() {
-  const total = state.expenses.reduce((s, e) => s + parseFloat(e.homeAmount), 0);
-  
-  // Pie Chart
+  const total = state.expenses.reduce((s, e) => s + convertToHome(e.amount, e.currency), 0);
   const sums = state.expenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + parseFloat(e.homeAmount);
+    const v = convertToHome(e.amount, e.currency);
+    acc[e.category] = (acc[e.category] || 0) + v;
     return acc;
   }, {});
   const sorted = Object.entries(sums).sort((a,b) => b[1] - a[1]);
   let deg = 0;
-  const gradient = sorted.map(([cat, val], i) => {
+  const grad = sorted.map(([cat, val], i) => {
     const p = total ? (val / total) * 100 : 0;
     const start = deg; deg += p;
     return `${COLORS[i % COLORS.length]} ${start}% ${deg}%`;
   });
   const pie = document.getElementById('category-pie');
-  if (pie) pie.style.background = `conic-gradient(${gradient.join(',') || 'var(--glass-border) 0% 100%'})`;
-  const legend = document.getElementById('category-legend');
-  if (legend) {
-    legend.innerHTML = sorted.map(([cat, val], i) => `
-      <div class="legend-item">
-        <div class="color-dot" style="background:${COLORS[i % COLORS.length]}"></div>
-        <span>${cat} (${total ? Math.round((val/total)*100) : 0}%)</span>
-      </div>
-    `).join('');
-  }
+  if (pie) pie.style.background = `conic-gradient(${grad.join(',') || 'var(--glass-border) 0% 100%'})`;
+  const leg = document.getElementById('category-legend');
+  if (leg) leg.innerHTML = sorted.map(([cat, val], i) => `<div class="legend-item"><div class="color-dot" style="background:${COLORS[i % COLORS.length]}"></div><span>${cat} (${total?Math.round((val/total)*100):0}%)</span></div>`).join('');
+  const info = document.getElementById('stat-total-info');
+  if (info) info.innerText = `總計約 $${Math.round(total).toLocaleString()} ${state.homeCurrency}`;
 
-  // VERTICAL Bar Chart
-  const daySums = state.expenses.reduce((acc, e) => {
-    acc[e.date] = (acc[e.date] || 0) + parseFloat(e.homeAmount);
+  // 每日支出邏輯
+  const dailySums = state.expenses.reduce((acc, e) => {
+    const v = convertToHome(e.amount, e.currency);
+    acc[e.date] = (acc[e.date] || 0) + v;
     return acc;
   }, {});
-
-  const sortedDays = Object.entries(daySums).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-  const max = Math.max(...Object.values(daySums), 1);
-  const dailyBars = document.getElementById('daily-bars');
+  const sortedDates = Object.entries(dailySums).sort((a,b) => a[0].localeCompare(b[0])); // 今天在最右邊
+  const maxDay = Math.max(...Object.values(dailySums), 1);
   
-  if (dailyBars) {
-    dailyBars.innerHTML = sortedDays.map(([date, val]) => {
-      const heightPercent = (val / max) * 60; // 降低比例至 60% 以留出標籤空間
-      const displayDate = date.substring(5); 
+  const barChart = document.getElementById('daily-bar-chart');
+  if (barChart) {
+    barChart.innerHTML = sortedDates.map(([date, val]) => {
+      const p = (val / maxDay) * 100;
+      const parts = date.split('-');
+      const dayStr = `${parseInt(parts[1])}/${parseInt(parts[2])}`; // M/D
       return `
-        <div class="bar-column">
-          <div class="bar-value">${Math.round(val).toLocaleString()}</div>
-          <div class="bar-stalk" style="height: ${heightPercent}%"></div>
-          <div class="bar-date">${displayDate}</div>
+        <div class="v-bar-item">
+          <div class="v-bar-val">${Math.round(val)}</div>
+          <div class="v-bar-track"><div class="v-bar-fill" style="height:${p}%"></div></div>
+          <div class="v-bar-label">${dayStr}</div>
         </div>
       `;
-    }).join('');
+    }).join('') || '<div style="text-align:center; opacity:0.5; font-size:0.8rem; padding:1rem; width:100%;">暫無數據</div>';
     
-    // Auto-scroll to the end for the latest records
-    setTimeout(() => {
-      const scrollBox = document.querySelector('.chart-scroll-box');
-      if (scrollBox) scrollBox.scrollLeft = scrollBox.scrollWidth;
-    }, 100);
+    // 自動滾動到最右邊 (今天)
+    setTimeout(() => { barChart.scrollLeft = barChart.scrollWidth; }, 100);
   }
 }
 
-function renderSettings() {
-  const emailInput = document.getElementById('export-email');
-  if (emailInput) emailInput.value = state.exportEmail;
-}
-
-function renderCurrencyList() {
-  const curList = document.getElementById('currency-list');
-  if (curList) {
-    curList.innerHTML = state.currencies.map((c, i) => `
-      <div class="manage-row">
-        <span style="font-weight:700;">${c.name} (${c.code})</span>
-        <div style="display:flex; align-items:center; gap:1rem;">
-          <span style="color:var(--secondary); font-weight:800; font-size:0.85rem;">1 : ${c.rate}</span>
-          <span onclick="deleteCurrency(${i})" style="color:var(--danger); cursor:pointer; font-weight:900;">✕</span>
+// ---------------------------------------------------------
+// 3. Global Functions (window exported)
+// ---------------------------------------------------------
+window.renderCurrencyTable = () => {
+  const tb = document.getElementById('currency-table-body');
+  if (!tb) return;
+  tb.innerHTML = state.currencies.map(c => `
+    <tr class="${state.homeCurrency === c.code || state.defaultEntryCurrency === c.code ? 'active-home-row' : ''}">
+      <td><b style="font-size:1.1rem; letter-spacing:0.05rem;">${c.code}</b></td>
+      <td onclick="window.editCurrencyRate('${c.code}')" style="cursor:pointer;">
+        <div class="rate-ratio-box">
+          <span class="rate-prefix">1 :</span>
+          <span class="rate-value">${c.rate}</span>
         </div>
-      </div>
-    `).join('');
-  }
-}
+      </td>
+      <td>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          ${state.homeCurrency===c.code?'<span class="home-badge">結算主幣</span>':`<button class="set-home-btn" onclick="window.setHomeCurrency('${c.code}')">設為結算</button>`}
+          ${state.defaultEntryCurrency===c.code?'<span class="home-badge" style="background:var(--success); box-shadow:0 4px 10px rgba(16,185,129,0.3);">預設記帳</span>':`<button class="set-home-btn" onclick="window.setDefaultEntryCurrency('${c.code}')">設為預設</button>`}
+        </div>
+      </td>
+      <td style="text-align:right;">${c.code==='TWD'?'':`<span onclick="window.deleteCurrencyByCode('${c.code}')" style="color:var(--danger); cursor:pointer; font-size:1.1rem;">✕</span>`}</td>
+    </tr>
+  `).join('');
+};
 
-function renderCategoryList() {
-  const catList = document.getElementById('category-list');
-  if (catList) {
-    catList.innerHTML = state.categories.map((c, i) => `
-      <span class="glass-tag">${c} <span onclick="deleteCategory(${i})" style="color:var(--danger); margin-left:5px; cursor:pointer;">✕</span></span>
-    `).join('');
-  }
-}
-
+window.setHomeCurrency = (c) => { state.homeCurrency = c; saveState(); initUI(); };
+window.setDefaultEntryCurrency = (c) => { state.defaultEntryCurrency = c; saveState(); initUI(); };
+window.editCurrencyRate = (c) => {
+  const cur = state.currencies.find(cu => cu.code === c);
+  const r = prompt(`修改 ${c} 匯率 (1 TWD = ?)`, cur.rate);
+  if (r && !isNaN(r)) { cur.rate = parseFloat(r); saveState(); initUI(); }
+};
+window.deleteCurrencyByCode = (c) => { if (confirm(`刪除 ${c}？`)) { state.currencies = state.currencies.filter(cu => cu.code !== c); saveState(); initUI(); } };
 window.addCurrency = () => {
-  const codeInput = document.getElementById('new-currency-code');
-  const rateInput = document.getElementById('new-currency-rate');
-  const code = codeInput.value.toUpperCase().trim();
-  const rate = parseFloat(rateInput.value);
-  if (code && rate) {
-    const name = currencyDict[code] || code;
-    state.currencies.push({ code, name, rate });
-    saveState(); initUI();
-    codeInput.value = ''; rateInput.value = '';
-    const hint = document.getElementById('currency-name-hint');
-    if (hint) {
-      hint.innerText = '名稱將自動代入...';
-      hint.style.color = 'var(--secondary)';
-    }
-  }
+  const c = document.getElementById('new-currency-code').value.toUpperCase().trim();
+  const r = parseFloat(document.getElementById('new-currency-rate').value);
+  if (c && !isNaN(r)) { state.currencies.push({ code: c, rate: r, name: c }); saveState(); initUI(); }
 };
-window.deleteCurrency = (idx) => { if (state.currencies.length > 1 && confirm('確定刪除？')) { state.currencies.splice(idx,1); saveState(); initUI(); } };
-window.addCategory = () => {
-  const nameInput = document.getElementById('new-category-name');
-  const name = nameInput.value.trim();
-  if (name && !state.categories.includes(name)) {
-    state.categories.push(name); saveState(); initUI(); nameInput.value = '';
-  }
-};
-window.deleteCategory = (idx) => { if (state.categories.length > 1 && confirm('確定刪除？')) { state.categories.splice(idx,1); saveState(); initUI(); } };
 
-window.openManual = () => {
+window.renderCategoryList = () => {
+  const el = document.getElementById('category-list');
+  if (el) el.innerHTML = state.categories.map((c, i) => `<span class="glass-tag">${c} <span onclick="window.deleteCategory(${i})" style="color:var(--danger); cursor:pointer;">✕</span></span>`).join('');
+};
+window.addCategory = () => { const n = document.getElementById('new-category-name').value.trim(); if (n) { state.categories.push(n); saveState(); initUI(); } };
+window.deleteCategory = (i) => { if (confirm('刪除類別？')) { state.categories.splice(i,1); saveState(); initUI(); } };
+
+window.openModal = (id = null) => {
+  state.editingId = id ? String(id) : null;
+  const exp = id ? state.expenses.find(e => String(e.id) === String(id)) : null;
   const overlay = document.getElementById('modal-overlay');
   const content = document.getElementById('modal-content');
-  const temp = document.getElementById('manual-template').content.cloneNode(true);
-  content.innerHTML = '';
-  content.appendChild(temp);
-  overlay.style.display = 'flex';
-};
-
-window.checkUpdate = () => {
-  const btn = document.getElementById('check-update-btn');
-  const status = document.getElementById('update-status');
-  if (!btn || !('serviceWorker' in navigator)) return;
+  content.innerHTML = document.getElementById('form-template').innerHTML;
   
-  btn.innerText = '🔍 正在搜尋更新中...';
-  status.innerText = '正在對比伺服器版本，請稍候...';
-  
-  navigator.serviceWorker.getRegistration().then(reg => {
-    if (!reg) {
-      status.innerText = '未偵測到離線註冊，請連結網路重開。';
-      btn.innerText = '🔄 檢查系統更新';
-      return;
-    }
-    
-    reg.update().then(() => {
-      // 若已有正在安裝或等待中的新版
-      if (reg.installing || reg.waiting) {
-        status.innerText = '✅ 發現新版本！正在同步數據與套用更新...';
-        status.style.color = 'var(--success)';
-        setTimeout(() => window.location.reload(), 2000);
-      } else {
-        // 如果伺服器檔案完全沒變（hash 一致）
-        btn.innerText = '✨ 已是最新版本';
-        status.innerText = '恭喜！您的 App 目前已是全球同步的最新版本。';
-        status.style.color = 'var(--text-dim)';
-        setTimeout(() => {
-          btn.innerText = '🔄 檢查系統更新 (Manual Update)';
-        }, 4000);
-      }
-    }).catch(err => {
-      status.innerText = '⚠️ 檢查失敗 (請確認網路或 GitHub 狀態)';
-      btn.innerText = '🔄 檢查系統更新';
-    });
-  });
-};
+  const sel = document.getElementById('currency-select');
+  sel.innerHTML = state.currencies.map(c => `<option value="${c.code}" ${(exp ? exp.currency : state.defaultEntryCurrency) === c.code ? 'selected' : ''}>${c.name} (${c.code})</option>`).join('');
+  const grid = document.getElementById('form-category-grid');
+  grid.innerHTML = state.categories.map(c => `<div class="cat-opt ${exp?.category===c?'selected':''}" data-cat="${c}">${c}</div>`).join('');
+  grid.querySelectorAll('.cat-opt').forEach(o => o.onclick = () => { grid.querySelectorAll('.cat-opt').forEach(x => x.classList.remove('selected')); o.classList.add('selected'); });
 
-function openModal(id = null) {
-  state.editingId = id;
-  const exp = id ? state.expenses.find(e => e.id === id) : null;
-  const overlay = document.getElementById('modal-overlay');
-  const content = document.getElementById('modal-content');
-  const temp = document.getElementById('form-template').content.cloneNode(true);
-  content.innerHTML = '';
-  content.appendChild(temp);
-  
-  // Render Quick Tags (v4.5)
-  window.renderQuickTags();
-
-  const curSel = document.getElementById('currency-select');
-  curSel.innerHTML = state.currencies.map(c => `<option value="${c.code}" ${exp?.currency === c.code ? 'selected' : (c.code==='VND'?'selected':'')}>${c.name} (${c.code})</option>`).join('');
-  const catGrid = document.getElementById('form-category-grid');
-  catGrid.innerHTML = state.categories.map(c => `<div class="cat-opt ${exp?.category === c ? 'selected' : (exp? '':(state.categories[0]===c?'selected':''))}" data-cat="${c}">${c}</div>`).join('');
-  catGrid.querySelectorAll('.cat-opt').forEach(opt => {
-    opt.onclick = () => {
-      catGrid.querySelectorAll('.cat-opt').forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-    };
-  });
   if (exp) {
     document.getElementById('modal-title').innerText = '編輯紀錄';
-    document.getElementById('foreign-amount').value = exp.foreignAmount;
+    document.getElementById('amount').value = exp.amount;
     document.getElementById('tag').value = exp.tag;
     document.getElementById('date').value = exp.date;
-    const delBtn = document.getElementById('delete-record-btn');
-    delBtn.style.display = 'flex';
-    delBtn.onclick = () => { if (confirm('確定刪除？')) { state.expenses = state.expenses.filter(e => e.id !== id); saveState(); closeModal(); initUI(); } };
+    const del = document.getElementById('delete-record-btn');
+    del.style.display = 'flex';
+    del.onclick = () => { if (confirm('確定刪除？')) { state.expenses = state.expenses.filter(e => String(e.id) !== String(id)); saveState(); window.closeModal(); initUI(); } };
   } else {
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    const firstCat = grid.querySelector('.cat-opt');
+    if (firstCat) firstCat.classList.add('selected');
   }
+
   document.getElementById('expense-form').onsubmit = (e) => {
     e.preventDefault();
-    const curCode = curSel.value;
-    const rate = state.currencies.find(c => c.code === curCode).rate;
-    
-    // Calculator: Process final math before saving
-    let rawVal = document.getElementById('foreign-amount').value;
-    let finalAmt = safeEval(rawVal);
-    if (finalAmt === null || isNaN(finalAmt)) finalAmt = parseFloat(rawVal) || 0;
-
     const data = {
       id: exp ? exp.id : Date.now().toString(),
-      currency: curCode,
-      foreignAmount: finalAmt,
-      homeAmount: finalAmt / rate,
-      category: catGrid.querySelector('.cat-opt.selected').dataset.cat,
+      currency: sel.value,
+      amount: parseFloat(document.getElementById('amount').value),
+      category: grid.querySelector('.cat-opt.selected').dataset.cat,
       tag: document.getElementById('tag').value,
       date: document.getElementById('date').value
     };
-    if (exp) state.expenses = state.expenses.map(e => e.id === id ? data : e); else state.expenses.push(data);
-    saveState(); closeModal(); initUI();
+    if (exp) state.expenses = state.expenses.map(x => String(x.id)===String(id)?data:x); else state.expenses.push(data);
+    saveState(); window.closeModal(); initUI();
   };
   overlay.style.display = 'flex';
+};
 
-  // Calculator Input Listener
-  const amountInput = document.getElementById('foreign-amount');
-  const preview = document.getElementById('calc-preview');
-  if (amountInput && preview) {
-    amountInput.oninput = () => {
-      const val = amountInput.value;
-      if (/[+\-*/]/.test(val)) {
-        const res = safeEval(val);
-        preview.innerText = (res !== null) ? `= ${res}` : '算式錯誤';
-        preview.style.display = 'inline';
-      } else {
-        preview.style.display = 'none';
-      }
-    };
-  }
-}
-window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; state.editingId = null; };
-
-window.confirmClearAll = () => { if (confirm('⚠️ 警告：將刪除「所有」記帳紀錄，無法恢復！')) { if (confirm('再次確認刪除？')) { state.expenses = []; saveState(); initUI(); } } };
-window.exportData = async () => {
-  if (state.expenses.length === 0) return alert('數據庫為空');
+window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; };
+window.confirmClearAll = () => { if (confirm('清空所有紀錄？')) { state.expenses = []; saveState(); initUI(); } };
+window.exportData = () => {
   const ws = XLSX.utils.json_to_sheet(state.expenses);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Expenses");
-  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const filename = `出差紀錄_${new Date().toISOString().split('T')[0]}.xlsx`;
-  if (navigator.share) { try { await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: '記帳備份', text: '出差記帳數據匯出' }); } catch { download(blob, filename); } } else { download(blob, filename); }
+  XLSX.writeFile(wb, `MoneyRecord_v5.1_${new Date().toISOString().split('T')[0]}.xlsx`);
 };
 window.importData = (e) => {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader(); reader.onload = (evt) => {
-    const data = new Uint8Array(evt.target.result);
-    const wb = XLSX.read(data, { type: 'array', cellDates: true });
-    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    if (confirm(`讀取到 ${json.length} 筆，是否合併？`)) {
-      const safeData = json.map(item => {
-        let dateVal = item.date;
-        if (dateVal instanceof Date) { dateVal = dateVal.toISOString().split('T')[0]; } 
-        else if (typeof dateVal === 'number' && dateVal > 40000) { dateVal = new Date((dateVal - 25569) * 86400 * 1000).toISOString().split('T')[0]; }
-        return {
-          ...item,
-          date: dateVal || new Date().toISOString().split('T')[0],
-          id: item.id || Date.now().toString() + Math.random().toString(36).substr(2, 5)
-        };
-      });
-      state.expenses = [...state.expenses, ...safeData];
-      saveState(); initUI(); alert('匯入完成！');
-    }
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = (evt) => {
+    const d = new Uint8Array(evt.target.result);
+    const wb = XLSX.read(d, { type: 'array' });
+    state.expenses = [...state.expenses, ...XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])];
+    saveState(); initUI(); alert('匯入完成');
   };
-  reader.readAsArrayBuffer(file);
+  r.readAsArrayBuffer(f);
 };
-function download(blob, name) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); }
