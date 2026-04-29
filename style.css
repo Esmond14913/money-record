@@ -130,6 +130,10 @@ body { background: var(--bg); color: var(--text); overflow-x: hidden; min-height
 .nav-item { padding: 0.5rem 0.2rem; min-width: 50px; }
 .nav-item span { font-size: 0.6rem; }
 
+/* Currency Delete Button */
+.delete-cur-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: rgba(255,59,48,0.1); color: #ff3b30; border-radius: 50%; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; margin-left: auto; }
+.delete-cur-btn:hover { background: #ff3b30; color: white; transform: scale(1.1); }
+
 /* Missing Management Styles */
 .input-row { display: flex; flex-direction: column; gap: 1rem; }
 .add-btn-wide { width: 100%; padding: 1rem; background: var(--accent); color: #fff; border: none; border-radius: 1.15rem; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 8px 15px rgba(99, 102, 241, 0.2); }

@@ -32,7 +32,8 @@ let state = {
   homeCurrency: localStorage.getItem('mr_v4_home') || 'TWD',
   defaultEntryCurrency: localStorage.getItem('mr_v4_def_cur') || 'VND', // 預設記帳幣別
   currentView: 'home',
-  editingId: null
+  editingId: null,
+  version: 'v5.1.2' // 動態版號
 };
 
 const icons = { '餐飲': '🍴', '交通': '🚗', '住宿': '🏨', '購物': '🛍️', '其他': '📦', 'default': '💰' };
@@ -68,6 +69,10 @@ function saveState() {
 }
 
 function initUI() {
+  // 更新版號顯示
+  const vTags = document.querySelectorAll('.v-tag');
+  vTags.forEach(t => t.innerText = state.version);
+  
   // 自動補齊並置頂預設幣別 (TWD 優先)
   const defaults = [
     { code: 'TWD', rate: 1, name: '台幣' },
@@ -235,7 +240,9 @@ window.renderCurrencyTable = () => {
           ${state.defaultEntryCurrency===c.code?'<span class="home-badge" style="background:var(--success); box-shadow:0 4px 10px rgba(16,185,129,0.3);">預設記帳</span>':`<button class="set-home-btn" onclick="window.setDefaultEntryCurrency('${c.code}')">設為預設</button>`}
         </div>
       </td>
-      <td style="text-align:right;">${c.code==='TWD'?'':`<span onclick="window.deleteCurrencyByCode('${c.code}')" style="color:var(--danger); cursor:pointer; font-size:1.1rem;">✕</span>`}</td>
+      <td style="text-align:right; width:40px;">
+        ${c.code==='TWD' ? '' : `<div onclick="window.deleteCurrencyByCode('${c.code}')" class="delete-cur-btn">✕</div>`}
+      </td>
     </tr>
   `).join('');
 };
@@ -316,7 +323,13 @@ window.importData = (e) => {
   const r = new FileReader(); r.onload = (evt) => {
     const d = new Uint8Array(evt.target.result);
     const wb = XLSX.read(d, { type: 'array' });
-    state.expenses = [...state.expenses, ...XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])];
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const fixedRows = rows.map(r => ({
+      ...r,
+      currency: r.currency || 'TWD',
+      id: String(r.id)
+    }));
+    state.expenses = [...state.expenses, ...fixedRows];
     saveState(); initUI(); alert('匯入完成');
   };
   r.readAsArrayBuffer(f);
