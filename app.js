@@ -9,6 +9,14 @@ if ('serviceWorker' in navigator) {
       console.log('SW Registration Failed:', err);
     });
   });
+  
+  // 監聽更新並自動重載
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
 }
 let state = {
   expenses: JSON.parse(localStorage.getItem('mr_v4_exp')) || [],
