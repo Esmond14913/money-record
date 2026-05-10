@@ -312,6 +312,66 @@ window.openModal = (id = null) => {
 };
 
 window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; };
+
+// Calculator Engine
+let calcExpression = '';
+window.toggleCalc = (forceOpen = null) => {
+  const panel = document.getElementById('calculator-panel');
+  const isOpen = panel.style.display === 'block';
+  const target = forceOpen !== null ? forceOpen : !isOpen;
+  
+  if (target) {
+    panel.style.display = 'block';
+    calcExpression = document.getElementById('amount').value || '';
+    updateCalcDisplay();
+  } else {
+    // Confirm and close
+    const tempResult = calculateResult(calcExpression);
+    if (tempResult !== null) {
+      document.getElementById('amount').value = tempResult;
+    }
+    panel.style.display = 'none';
+  }
+};
+
+window.pressCalc = (key) => {
+  if (key === 'C') {
+    calcExpression = '';
+  } else if (key === 'DEL') {
+    calcExpression = calcExpression.toString().slice(0, -1);
+  } else if (key === '=') {
+    const res = calculateResult(calcExpression);
+    if (res !== null) {
+      document.getElementById('amount').value = res;
+      window.toggleCalc(false);
+      return;
+    }
+  } else {
+    calcExpression += key;
+  }
+  updateCalcDisplay();
+};
+
+function updateCalcDisplay() {
+  const expEl = document.getElementById('calc-expression');
+  const tempEl = document.getElementById('calc-temp-result');
+  expEl.innerText = calcExpression || '0';
+  const res = calculateResult(calcExpression);
+  tempEl.innerText = res !== null ? `= ${res}` : '';
+}
+
+function calculateResult(exp) {
+  if (!exp) return null;
+  try {
+    // Sanitization: only numbers and operators
+    const sanitized = exp.replace(/[^-()\d/*+.]/g, '');
+    const res = Function('"use strict";return (' + sanitized + ')')();
+    return isFinite(res) ? Math.round(res * 100) / 100 : null;
+  } catch (e) {
+    return null;
+  }
+}
+
 window.confirmClearAll = () => { if (confirm('清空所有紀錄？')) { state.expenses = []; saveState(); initUI(); } };
 window.exportData = () => {
   const ws = XLSX.utils.json_to_sheet(state.expenses);
