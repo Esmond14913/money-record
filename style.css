@@ -139,23 +139,11 @@ body { background: var(--bg); color: var(--text); overflow-x: hidden; min-height
 .add-btn-wide { width: 100%; padding: 1rem; background: var(--accent); color: #fff; border: none; border-radius: 1.15rem; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 8px 15px rgba(99, 102, 241, 0.2); }
 .add-btn-wide:active { transform: scale(0.98); }
 
-/* Calculator UI */
-.amount-calc-wrap { display: flex; gap: 0.5rem; align-items: center; }
-.amount-input-field { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; color: var(--accent-light); }
-.calc-toggle-btn { background: var(--glass); border: 1px solid var(--glass-border); color: var(--secondary); width: 3.5rem; height: 3.5rem; border-radius: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.calc-toggle-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-
-.calculator-panel { display: none; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--glass-border); border-radius: 1.5rem; padding: 1rem; margin-top: 0.8rem; animation: slideDown 0.3s ease; }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-.calc-display { background: rgba(0,0,0,0.2); border-radius: 0.8rem; padding: 0.8rem; margin-bottom: 1rem; display: flex; flex-direction: column; align-items: flex-end; min-height: 3.5rem; justify-content: center; }
-.calc-exp { font-size: 0.8rem; color: var(--secondary); font-family: 'JetBrains Mono', monospace; }
-.calc-temp { font-size: 1.2rem; font-weight: 800; color: #fff; font-family: 'JetBrains Mono', monospace; }
-
-.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
-.c-btn { border: 1px solid var(--glass-border); border-radius: 0.8rem; padding: 1rem 0; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.1s; background: var(--glass); color: #fff; outline: none; }
-.c-btn:active { transform: scale(0.92); filter: brightness(1.2); }
-.c-btn.num { background: rgba(255,255,255,0.05); }
-.c-btn.op { background: rgba(99, 102, 241, 0.2); color: var(--accent-light); border-color: rgba(99, 102, 241, 0.3); }
-.c-btn.func { background: rgba(255,255,255,0.02); color: var(--secondary); }
-.c-btn.eq { background: var(--accent); color: #fff; border: none; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); grid-column: span 1; }
+/* Mini Calc Styles */
+.mini-calc-container { display: flex; flex-direction: column; gap: 0.6rem; }
+.mini-calc-row { display: flex; gap: 0.4rem; width: 100%; }
+.m-btn { flex: 1; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 0.8rem; padding: 0.7rem 0; color: #fff; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; }
+.m-btn:active { transform: scale(0.9); background: var(--accent); }
+.m-btn.op-eq { background: var(--accent); border: none; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+.m-btn.op-clr { color: var(--danger); background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
+.amount-input-field { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; color: var(--accent-light); font-weight: 800; }

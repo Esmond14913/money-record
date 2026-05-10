@@ -168,43 +168,15 @@
         <form id="expense-form">
             <div class="form-group">
                 <label>金額</label>
-                <div class="amount-calc-wrap">
-                    <input type="text" id="amount" class="glass-input amount-input-field" placeholder="0.00" required readonly onclick="window.toggleCalc(true)">
-                    <button type="button" class="calc-toggle-btn" onclick="window.toggleCalc()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="14"></line><line x1="16" y1="18" x2="16" y2="18"></line><line x1="12" y1="14" x2="12" y2="14"></line><line x1="12" y1="18" x2="12" y2="18"></line><line x1="8" y1="14" x2="8" y2="14"></line><line x1="8" y1="18" x2="8" y2="18"></line></svg>
-                    </button>
-                </div>
-                <!-- Calculator Panel -->
-                <div id="calculator-panel" class="calculator-panel">
-                    <div class="calc-display">
-                        <span id="calc-expression" class="calc-exp"></span>
-                        <span id="calc-temp-result" class="calc-temp"></span>
-                    </div>
-                    <div class="calc-grid">
-                        <button type="button" class="c-btn func" onclick="window.pressCalc('C')">C</button>
-                        <button type="button" class="c-btn func" onclick="window.pressCalc('(')">(</button>
-                        <button type="button" class="c-btn func" onclick="window.pressCalc(')')">)</button>
-                        <button type="button" class="c-btn op" onclick="window.pressCalc('/')">÷</button>
-                        
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('7')">7</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('8')">8</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('9')">9</button>
-                        <button type="button" class="c-btn op" onclick="window.pressCalc('*')">×</button>
-                        
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('4')">4</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('5')">5</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('6')">6</button>
-                        <button type="button" class="c-btn op" onclick="window.pressCalc('-')">−</button>
-                        
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('1')">1</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('2')">2</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('3')">3</button>
-                        <button type="button" class="c-btn op" onclick="window.pressCalc('+')">+</button>
-                        
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('0')">0</button>
-                        <button type="button" class="c-btn num" onclick="window.pressCalc('.')">.</button>
-                        <button type="button" class="c-btn func" onclick="window.pressCalc('DEL')">⌫</button>
-                        <button type="button" class="c-btn eq" onclick="window.pressCalc('=')">OK</button>
+                <div class="mini-calc-container">
+                    <input type="text" id="amount" class="glass-input amount-input-field" placeholder="0.00" required>
+                    <div class="mini-calc-row">
+                        <button type="button" class="m-btn" onclick="window.appendCalc('+')">+</button>
+                        <button type="button" class="m-btn" onclick="window.appendCalc('-')">−</button>
+                        <button type="button" class="m-btn" onclick="window.appendCalc('*')">×</button>
+                        <button type="button" class="m-btn" onclick="window.appendCalc('/')">÷</button>
+                        <button type="button" class="m-btn op-eq" onclick="window.execCalc()">＝</button>
+                        <button type="button" class="m-btn op-clr" onclick="window.clearCalc()">C</button>
                     </div>
                 </div>
             </div>

@@ -33,7 +33,7 @@ let state = {
   defaultEntryCurrency: localStorage.getItem('mr_v5_def_cur') || 'VND', // 預設記帳幣別
   currentView: 'home',
   editingId: null,
-  version: 'v5.1.2' // 動態版號
+  version: 'v5.1.6' // 緊急修復版
 };
 
 const icons = { '餐飲': '🍴', '交通': '🚗', '住宿': '🏨', '購物': '🛍️', '其他': '📦', 'default': '💰' };
@@ -313,6 +313,25 @@ window.openModal = (id = null) => {
 
 window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; };
 
+// Minimalist Calc Functions
+window.appendCalc = (op) => {
+  const el = document.getElementById('amount');
+  el.value = el.value + op;
+};
+window.clearCalc = () => {
+  document.getElementById('amount').value = '';
+};
+window.execCalc = () => {
+  const el = document.getElementById('amount');
+  try {
+    const sanitized = el.value.replace(/[^-()\d/*+.]/g, '');
+    const res = Function('"use strict";return (' + sanitized + ')')();
+    el.value = isFinite(res) ? Math.round(res * 100) / 100 : '';
+  } catch (e) {
+    alert('計算錯誤');
+  }
+};
+
 window.forceUpdateSystem = () => {
   if (confirm('將強制重新整理以檢查新版本，目前的設定將保留。確定執行？')) {
     if ('serviceWorker' in navigator) {
@@ -325,65 +344,6 @@ window.forceUpdateSystem = () => {
     }
   }
 };
-
-// Calculator Engine
-let calcExpression = '';
-window.toggleCalc = (forceOpen = null) => {
-  const panel = document.getElementById('calculator-panel');
-  const isOpen = panel.style.display === 'block';
-  const target = forceOpen !== null ? forceOpen : !isOpen;
-  
-  if (target) {
-    panel.style.display = 'block';
-    calcExpression = document.getElementById('amount').value || '';
-    updateCalcDisplay();
-  } else {
-    // Confirm and close
-    const tempResult = calculateResult(calcExpression);
-    if (tempResult !== null) {
-      document.getElementById('amount').value = tempResult;
-    }
-    panel.style.display = 'none';
-  }
-};
-
-window.pressCalc = (key) => {
-  if (key === 'C') {
-    calcExpression = '';
-  } else if (key === 'DEL') {
-    calcExpression = calcExpression.toString().slice(0, -1);
-  } else if (key === '=') {
-    const res = calculateResult(calcExpression);
-    if (res !== null) {
-      document.getElementById('amount').value = res;
-      window.toggleCalc(false);
-      return;
-    }
-  } else {
-    calcExpression += key;
-  }
-  updateCalcDisplay();
-};
-
-function updateCalcDisplay() {
-  const expEl = document.getElementById('calc-expression');
-  const tempEl = document.getElementById('calc-temp-result');
-  expEl.innerText = calcExpression || '0';
-  const res = calculateResult(calcExpression);
-  tempEl.innerText = res !== null ? `= ${res}` : '';
-}
-
-function calculateResult(exp) {
-  if (!exp) return null;
-  try {
-    // Sanitization: only numbers and operators
-    const sanitized = exp.replace(/[^-()\d/*+.]/g, '');
-    const res = Function('"use strict";return (' + sanitized + ')')();
-    return isFinite(res) ? Math.round(res * 100) / 100 : null;
-  } catch (e) {
-    return null;
-  }
-}
 
 window.confirmClearAll = () => { if (confirm('清空所有紀錄？')) { state.expenses = []; saveState(); initUI(); } };
 window.exportData = () => {
