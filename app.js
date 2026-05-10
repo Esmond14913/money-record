@@ -313,6 +313,19 @@ window.openModal = (id = null) => {
 
 window.closeModal = () => { document.getElementById('modal-overlay').style.display = 'none'; };
 
+window.forceUpdateSystem = () => {
+  if (confirm('將強制重新整理以檢查新版本，目前的設定將保留。確定執行？')) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        for(let reg of regs) reg.unregister();
+        window.location.reload(true);
+      });
+    } else {
+      window.location.reload(true);
+    }
+  }
+};
+
 // Calculator Engine
 let calcExpression = '';
 window.toggleCalc = (forceOpen = null) => {

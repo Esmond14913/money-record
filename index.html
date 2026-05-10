@@ -91,7 +91,8 @@
                         <button class="action-btn-glass" onclick="document.getElementById('import-file').click()">匯入資料</button>
                         <input type="file" id="import-file" accept=".xlsx" style="display:none;" onchange="window.importData(event)">
                     </div>
-                    <button class="danger-btn-glass" style="margin-top:1rem;" onclick="window.confirmClearAll()">清空所有紀錄</button>
+                    <button class="action-btn-glass" style="margin-top:0.8rem; width:100%; border-color:var(--accent-light); color:var(--accent-light);" onclick="window.forceUpdateSystem()">🔄 檢查系統更新</button>
+                    <button class="danger-btn-glass" style="margin-top:1.5rem;" onclick="window.confirmClearAll()">清空所有紀錄</button>
                 </div>
 
                 <footer class="app-footer">
